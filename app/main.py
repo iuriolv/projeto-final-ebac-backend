@@ -7,15 +7,15 @@ import redis
 redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
 class Sprite(BaseModel):
-    front_default: str
-    back_default: str
+    front_default: str | None
+    back_default: str | None
 
 class Pokemon(BaseModel):
     name: str
     id: int
     height: int
     weight: int
-    types: list
+    types: list[str]
     sprites: Sprite
 
 app = FastAPI()
