@@ -1,0 +1,59 @@
+name: Basic CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  ci:
+    name: Testes e qualidade
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: "pip"
+
+      - name: Instalar Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Verificar Poetry
+        run: poetry --version
+
+      - name: Instalar dependências
+        run: poetry install --no-interaction --no-ansi
+
+      - name: Verificar instalação
+        run: poetry check
+
+      - name: Executar lint
+        run: poetry run ruff check .
+
+      - name: Executar testes e verificar cobertura
+        run: poetry run pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+
+  deploy:
+    name: Deploy
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Deploy
+        run: |
+          echo "Deploy realizado com sucesso!"
