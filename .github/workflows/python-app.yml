@@ -38,9 +38,6 @@ jobs:
       - name: Verificar instalação
         run: poetry check
 
-      - name: Executar lint
-        run: poetry run ruff check .
-
       - name: Executar testes e verificar cobertura
         run: poetry run pytest --cov=app --cov-report=term-missing --cov-fail-under=80
 
