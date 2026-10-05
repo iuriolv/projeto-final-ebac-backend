@@ -44,10 +44,11 @@ async def acessar_api(page: int = 1, limit: int = 20, ):
         "limite": limit,
         "offset": offset,
         "next": dados["next"],
-        "previous": dados["previous"]
+        "previous": dados["previous"],
+        "Pokemons": dados["results"]
     }
 
-@app.get("/pokemons/{id}")
+@app.get("/pokemons/{id}", response_model=Pokemon)
 async def acessar_pokemon_id(id: int):
 
     url = f"https://pokeapi.co/api/v2/pokemon/{id}"
