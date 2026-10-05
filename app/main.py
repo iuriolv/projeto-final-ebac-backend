@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 import requests
 from pydantic import BaseModel
+import json
 import redis
 
 redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True)
@@ -33,7 +34,7 @@ async def acessar_api(page: int = 1, limit: int = 20, ):
     response = requests.get(url)
 
     if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail="Erro ao acessar a Poke API")
+        raise HTTPException(status_code=404, detail="Erro ao acessar a Poke API")
 
 
     dados = response.json()
@@ -51,11 +52,34 @@ async def acessar_api(page: int = 1, limit: int = 20, ):
 @app.get("/pokemons/{id}", response_model=Pokemon)
 async def acessar_pokemon_id(id: int):
 
+    cache_key = f"Pokemon:{id}"
+
+    cached_data = redis_client.get(cache_key)
+
+    if cached_data:
+        return json.loads(cached_data)
+
     url = f"https://pokeapi.co/api/v2/pokemon/{id}"
 
     response = requests.get(url)
 
     if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail="Pokemon não encontrado")
+        raise HTTPException(status_code=404, detail="Pokemon não encontrado")
 
-    return response.json()
+    dados = response.json()
+
+    resultado = {
+        "name": dados["name"],
+        "id": dados["id"],
+        "height": dados["height"],
+        "weight": dados["weight"],
+        "types": [tipo["type"]["name"] for tipo in dados["types"]],
+        "sprites": {
+            "front_default": dados["sprites"]["front_default"],
+            "back_default": dados["sprites"]["back_default"]
+        }
+    }
+
+    redis_client.setex(cache_key, 300, json.dumps(resultado))
+
+    return resultado
