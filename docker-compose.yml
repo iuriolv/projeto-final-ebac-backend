@@ -1,15 +1,17 @@
-FROM python:3.14-slim
+services:
+  api:
+    build: .
+    container_name: pokemon-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
 
-WORKDIR /app
-
-COPY pyproject.toml poetry.lock ./
-
-RUN pip install poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --no-interaction --no-ansi
-
-COPY app ./app
-
-EXPOSE 8000
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+  redis:
+    image: redis:7-alpine
+    container_name: pokemon-redis
+    ports:
+      - "6379:6379"
