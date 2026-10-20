@@ -4,6 +4,8 @@ from pydantic import BaseModel
 import json
 import redis
 import os
+from app.database import Base, engine
+from app import models
 
 redis_client = redis.Redis(host=os.getenv("REDIS_HOST", "localhost"), port=int(os.getenv("REDIS_PORT", 6379)), decode_responses=True)
 
@@ -20,6 +22,8 @@ class Pokemon(BaseModel):
     sprites: Sprite
 
 app = FastAPI()
+
+Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 async def read_root():
