@@ -1,11 +1,6 @@
-from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
-from app.main import app
 
-client = TestClient(app)
-
-def test_pokemon_id():
-
+def test_pokemon_id(client):
     dados_pokemon = {
         "name": "pikachu",
         "id": 25,
@@ -28,15 +23,15 @@ def test_pokemon_id():
     resposta_pokeapi.status_code = 200
     resposta_pokeapi.json.return_value = dados_pokemon
 
-    with patch("app.main.redis_client.get", return_value=None):
-        with patch("app.main.redis_client.setex"):
-            with patch("app.main.requests.get", return_value=resposta_pokeapi):
+    with patch(
+        "app.main.requests.get",
+        return_value=resposta_pokeapi
+    ) as requisicao:
+        resposta = client.get("/pokeapi/pokemons/25")
 
-                response = client.get("pokeapi/pokemons/25")
+    assert resposta.status_code == 200
 
-    assert response.status_code == 200
-
-    dados = response.json()
+    dados = resposta.json()
 
     assert dados["name"] == "pikachu"
     assert dados["id"] == 25
@@ -45,5 +40,12 @@ def test_pokemon_id():
     assert dados["types"] == ["electric"]
 
     assert "sprites" in dados
-    assert "front_default" in dados["sprites"]
-    assert "back_default" in dados["sprites"]
+    assert dados["sprites"]["front_default"] == ("https://example.com/front.png")
+    assert dados["sprites"]["back_default"] == ("https://example.com/back.png")
+
+    requisicao.assert_called_once()
+
+    resposta_local = client.get("/pokemons/25")
+
+    assert resposta_local.status_code == 200
+    assert resposta_local.json()["name"] == "pikachu"

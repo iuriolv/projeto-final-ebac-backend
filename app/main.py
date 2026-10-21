@@ -57,21 +57,38 @@ async def acessar_api(page: int = 1, limit: int = 20):
     }
 
 @app.get("/pokeapi/pokemons/{id}", response_model=Pokemon)
-async def acessar_pokemon_id(id: int):
+def acessar_pokemon_id(id: int, db: Session = Depends(get_db)):
+    pokemon_local = (
+        db.query(PokemonDB)
+        .filter(PokemonDB.id == id)
+        .first()
+    )
 
-    cache_key = f"Pokemon:{id}"
-
-    cached_data = redis_client.get(cache_key)
-
-    if cached_data:
-        return json.loads(cached_data)
+    if pokemon_local:
+        return {
+            "name": pokemon_local.name,
+            "id": pokemon_local.id,
+            "height": pokemon_local.height,
+            "weight": pokemon_local.weight,
+            "types": pokemon_local.types,
+            "sprites": {
+                "front_default": pokemon_local.front_default,
+                "back_default": pokemon_local.back_default,
+            },
+        }
 
     url = f"https://pokeapi.co/api/v2/pokemon/{id}"
 
-    response = requests.get(url)
+    try:
+        response = requests.get(url, timeout=10)
+    except requests.RequestException:
+        raise HTTPException(status_code=503, detail="Não foi possível acessar a PokéAPI")
+
+    if response.status_code == 404:
+        raise HTTPException(status_code=404, detail="Pokemon não encontrado")
 
     if response.status_code != 200:
-        raise HTTPException(status_code=404, detail="Pokemon não encontrado")
+        raise HTTPException(status_code=502, detail="Erro ao consultar a PokéAPI")
 
     dados = response.json()
 
@@ -80,17 +97,31 @@ async def acessar_pokemon_id(id: int):
         "id": dados["id"],
         "height": dados["height"],
         "weight": dados["weight"],
-        "types": [tipo["type"]["name"] for tipo in dados["types"]],
+        "types": [
+            tipo["type"]["name"]
+            for tipo in dados["types"]
+        ],
         "sprites": {
             "front_default": dados["sprites"]["front_default"],
-            "back_default": dados["sprites"]["back_default"]
-        }
+            "back_default": dados["sprites"]["back_default"],
+        },
     }
 
-    redis_client.setex(cache_key, 300, json.dumps(resultado))
+    novo_pokemon = PokemonDB(
+        id=resultado["id"],
+        name=resultado["name"],
+        height=resultado["height"],
+        weight=resultado["weight"],
+        types=resultado["types"],
+        front_default=resultado["sprites"]["front_default"],
+        back_default=resultado["sprites"]["back_default"],
+    )
+
+    db.add(novo_pokemon)
+    db.commit()
+    db.refresh(novo_pokemon)
 
     return resultado
-
 
 @app.post("/pokemons", response_model=PokemonResponse)
 def criar_pokemon(pokemon: CriarPokemon, db: Session = Depends(get_db)):

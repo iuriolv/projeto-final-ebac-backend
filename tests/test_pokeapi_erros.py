@@ -15,22 +15,24 @@ def test_listagem_pokeapi_com_erro():
     assert resposta.json()["detail"] == "Erro ao acessar a Poke API"
 
 
-def test_buscar_pokemon_no_cache():
-    dados_cache = {
+
+def test_buscar_pokemon_no_cache(client):
+    dados = {
         "name": "pikachu",
-        "id": 25,
         "height": 4,
         "weight": 60,
         "types": ["electric"],
-        "sprites": {
-            "front_default": "https://example.com/front.png",
-            "back_default": "https://example.com/back.png",
-        },
+        "front_default": "https://example.com/front.png",
+        "back_default": "https://example.com/back.png",
     }
 
-    with patch("app.main.redis_client.get", return_value=__import__("json").dumps(dados_cache)):
-        with patch("app.main.requests.get") as requisicao:
-            resposta = client.get("/pokeapi/pokemons/25")
+    cadastro = client.post("/pokemons", json=dados)
+    assert cadastro.status_code == 200
+
+    pokemon_id = cadastro.json()["id"]
+
+    with patch("app.main.requests.get") as requisicao:
+        resposta = client.get(f"/pokeapi/pokemons/{pokemon_id}")
 
     assert resposta.status_code == 200
     assert resposta.json()["name"] == "pikachu"
