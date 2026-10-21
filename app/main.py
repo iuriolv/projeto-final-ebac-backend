@@ -58,10 +58,22 @@ async def acessar_api(page: int = 1, limit: int = 20):
 
 @app.get("/pokeapi/pokemons/{id}", response_model=Pokemon)
 def acessar_pokemon_id(id: int, db: Session = Depends(get_db)):
+    
+    chave_cache = f"pokemon:{id}"
+
+    try:
+        pokemon_cache = redis_client.get(chave_cache)
+
+        if pokemon_cache:
+            return json.loads(pokemon_cache)
+
+    except (redis.RedisError, json.JSONDecodeError):
+        pass
+
     pokemon_local = (db.query(PokemonDB).filter(PokemonDB.id == id).first())
 
     if pokemon_local:
-        return {
+        resultado = {
             "name": pokemon_local.name,
             "id": pokemon_local.id,
             "height": pokemon_local.height,
@@ -72,6 +84,13 @@ def acessar_pokemon_id(id: int, db: Session = Depends(get_db)):
                 "back_default": pokemon_local.back_default,
             },
         }
+
+        try:
+            redis_client.set(chave_cache, json.dumps(resultado), ex=300)
+        except redis.RedisError:
+            pass
+
+        return resultado
 
     url = f"https://pokeapi.co/api/v2/pokemon/{id}"
 
@@ -116,6 +135,11 @@ def acessar_pokemon_id(id: int, db: Session = Depends(get_db)):
     db.add(novo_pokemon)
     db.commit()
     db.refresh(novo_pokemon)
+
+    try:
+        redis_client.set(chave_cache, json.dumps(resultado), ex=300)
+    except redis.RedisError:
+        pass
 
     return resultado
 
