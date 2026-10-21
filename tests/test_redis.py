@@ -125,3 +125,62 @@ def test_pokemon_nao_encontrado_no_cache_nem_no_banco(client):
     resposta_local = client.get("/pokemons/6")
     assert resposta_local.status_code == 200
     assert resposta_local.json()["name"] == "charizard"
+
+def test_atualizar_pokemon_invalida_cache(client):
+    dados = {
+        "name": "pikachu",
+        "height": 4,
+        "weight": 60,
+        "types": ["electric"],
+        "front_default": "https://example.com/front.png",
+        "back_default": "https://example.com/back.png",
+    }
+
+    cadastro = client.post("/pokemons", json=dados)
+    assert cadastro.status_code == 200
+
+    pokemon_id = cadastro.json()["id"]
+
+    with patch("app.main.redis_client.delete") as redis_delete:
+        resposta = client.put(
+            f"/pokemons/{pokemon_id}",
+            json={
+                **dados,
+                "name": "pikachu-atualizado",
+            },
+        )
+
+    assert resposta.status_code == 200
+    assert resposta.json()["name"] == "pikachu-atualizado"
+
+    redis_delete.assert_called_once_with(f"pokemon:{pokemon_id}")
+
+    resposta_local = client.get(f"/pokemons/{pokemon_id}")
+    assert resposta_local.status_code == 200
+    assert resposta_local.json()["name"] == "pikachu-atualizado"
+
+def test_excluir_pokemon_invalida_cache(client):
+    dados = {
+        "name": "bulbasaur",
+        "height": 7,
+        "weight": 69,
+        "types": ["grass", "poison"],
+        "front_default": "https://example.com/front.png",
+        "back_default": "https://example.com/back.png",
+    }
+
+    cadastro = client.post("/pokemons", json=dados)
+    assert cadastro.status_code == 200
+
+    pokemon_id = cadastro.json()["id"]
+
+    with patch("app.main.redis_client.delete") as redis_delete:
+        resposta = client.delete(f"/pokemons/{pokemon_id}")
+
+    assert resposta.status_code == 200
+    assert resposta.json()["mensagem"] == "Pokemon excluído com sucesso"
+
+    redis_delete.assert_called_once_with(f"pokemon:{pokemon_id}")
+
+    resposta_local = client.get(f"/pokemons/{pokemon_id}")
+    assert resposta_local.status_code == 404

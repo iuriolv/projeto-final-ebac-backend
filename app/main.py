@@ -221,4 +221,9 @@ def excluir_pokemon(id: int, db: Session = Depends(get_db)):
     db.delete(pokemon)
     db.commit()
 
+    try:
+        redis_client.delete(f"pokemon:{id}")
+    except redis.RedisError:
+        pass
+
     return {"mensagem": "Pokemon excluído com sucesso"}
