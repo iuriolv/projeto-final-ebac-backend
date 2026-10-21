@@ -136,6 +136,15 @@ def listar_pokemons(page: int = 1, limit: int = 20, db: Session = Depends(get_db
         ],
     }
 
+@app.get("/pokemons/{id}", response_model=PokemonResponse)
+def buscar_pokemon(id: int, db: Session = Depends(get_db)):
+    pokemon = db.query(PokemonDB).filter(PokemonDB.id == id).first()
+
+    if pokemon is None:
+        raise HTTPException(status_code=404, detail="Pokemon não encontrado no banco de dados")
+
+    return pokemon
+
 @app.put("/pokemons/{id}", response_model=PokemonResponse)
 def atualizar_pokemon(id: int, dados: CriarPokemon, db: Session = Depends(get_db)):
     pokemon = db.query(PokemonDB).filter(PokemonDB.id == id).first()

@@ -18,7 +18,7 @@ def test_crud_pokemon(client):
 
     resposta = client.get("/pokemons")
     assert resposta.status_code == 200
-    assert len(resposta.json()) == 1
+    assert len(resposta.json()["Pokemons"]) == 1
 
     resposta = client.get(f"/pokemons/{pokemon_id}")
     assert resposta.status_code == 200
