@@ -58,11 +58,7 @@ async def acessar_api(page: int = 1, limit: int = 20):
 
 @app.get("/pokeapi/pokemons/{id}", response_model=Pokemon)
 def acessar_pokemon_id(id: int, db: Session = Depends(get_db)):
-    pokemon_local = (
-        db.query(PokemonDB)
-        .filter(PokemonDB.id == id)
-        .first()
-    )
+    pokemon_local = (db.query(PokemonDB).filter(PokemonDB.id == id).first())
 
     if pokemon_local:
         return {
@@ -145,12 +141,7 @@ def listar_pokemons(page: int = 1, limit: int = 20, db: Session = Depends(get_db
     query = db.query(PokemonDB)
     total = query.count()
 
-    pokemons = (
-        query
-        .offset(offset)
-        .limit(limit)
-        .all()
-    )
+    pokemons = (query.offset(offset).limit(limit).all())
 
     return {
         "pagina": page,
