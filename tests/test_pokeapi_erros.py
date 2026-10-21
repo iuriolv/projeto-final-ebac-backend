@@ -8,13 +8,15 @@ def test_listagem_pokeapi_com_erro():
     resposta_falsa = MagicMock()
     resposta_falsa.status_code = 500
 
-    with patch("app.main.requests.get", return_value=resposta_falsa):
+    with (
+        patch("app.main.redis_client.get", return_value=None),
+        patch("app.main.redis_client.set"),
+        patch("app.main.requests.get", return_value=resposta_falsa),
+    ):
         resposta = client.get("/pokeapi/pokemons")
 
-    assert resposta.status_code == 404
-    assert resposta.json()["detail"] == "Erro ao acessar a Poke API"
-
-
+    assert resposta.status_code == 502
+    assert resposta.json()["detail"] == "Erro ao acessar a PokéAPI"
 
 def test_buscar_pokemon_no_cache(client):
     dados = {

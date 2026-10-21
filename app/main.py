@@ -33,29 +33,51 @@ async def read_root():
 
 @app.get("/pokeapi/pokemons")
 async def acessar_api(page: int = 1, limit: int = 20):
-
     offset = (page - 1) * limit
 
-    url = f"https://pokeapi.co/api/v2/pokemon?limit={limit}&offset={offset}"
+    chave_cache = f"pokemons:list:page:{page}:limit:{limit}"
 
-    response = requests.get(url)
+    try:
+        dados_cache = redis_client.get(chave_cache)
+
+        if dados_cache:
+            return json.loads(dados_cache)
+
+    except (redis.RedisError, json.JSONDecodeError):
+        pass
+
+    url = (
+        f"https://pokeapi.co/api/v2/pokemon"
+        f"?limit={limit}&offset={offset}"
+    )
+
+    try:
+        response = requests.get(url, timeout=10)
+    except requests.RequestException:
+        raise HTTPException(status_code=503, detail="Não foi possível acessar a PokéAPI")
 
     if response.status_code != 200:
-        raise HTTPException(status_code=404, detail="Erro ao acessar a Poke API")
-
+        raise HTTPException(status_code=502, detail="Erro ao acessar a PokéAPI")
 
     dados = response.json()
 
-    return {
+    resultado = {
         "pagina": page,
         "total": dados["count"],
         "limite": limit,
         "offset": offset,
         "next": dados["next"],
         "previous": dados["previous"],
-        "Pokemons": dados["results"]
+        "Pokemons": dados["results"],
     }
 
+    try:
+        redis_client.set(chave_cache, json.dumps(resultado), ex=300)
+    except redis.RedisError:
+        pass
+
+    return resultado
+    
 @app.get("/pokeapi/pokemons/{id}", response_model=Pokemon)
 def acessar_pokemon_id(id: int, db: Session = Depends(get_db)):
     
