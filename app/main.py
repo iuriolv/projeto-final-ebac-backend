@@ -1,11 +1,13 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 import requests
 from pydantic import BaseModel
 import json
 import redis
 import os
-from app.database import Base, engine
-from app import models
+from sqlalchemy.orm import Session
+from app.database import Base, engine, get_db
+from app.models import PokemonDB
+from app.schemas import Pokemon, PokemonResponse
 
 redis_client = redis.Redis(host=os.getenv("REDIS_HOST", "localhost"), port=int(os.getenv("REDIS_PORT", 6379)), decode_responses=True)
 
@@ -29,7 +31,7 @@ Base.metadata.create_all(bind=engine)
 async def read_root():
     return {"Hello": "World"}
 
-@app.get("/pokemons")
+@app.get("/pokeapi/pokemons")
 async def acessar_api(page: int = 1, limit: int = 20, ):
 
     offset = (page - 1) * limit
@@ -54,7 +56,7 @@ async def acessar_api(page: int = 1, limit: int = 20, ):
         "Pokemons": dados["results"]
     }
 
-@app.get("/pokemons/{id}", response_model=Pokemon)
+@app.get("/pokeapi/pokemons/{id}", response_model=Pokemon)
 async def acessar_pokemon_id(id: int):
 
     cache_key = f"Pokemon:{id}"
@@ -88,3 +90,57 @@ async def acessar_pokemon_id(id: int):
     redis_client.setex(cache_key, 300, json.dumps(resultado))
 
     return resultado
+
+
+@app.post("/pokemons", response_model=PokemonResponse)
+def criar_pokemon(pokemon: Pokemon, db: Session = Depends(get_db)):
+
+    if db.query(PokemonDB).filter(PokemonDB.name == pokemon.name).first():
+        raise HTTPException(status_code=400, detail="Pokemon já existe no banco de dados")
+    
+    novo_pokemon = PokemonDB(**pokemon.model_dump())
+    db.add(novo_pokemon)
+    db.commit()
+    db.refresh(novo_pokemon)
+
+    return novo_pokemon
+
+@app.get("/pokemons", response_model=list[PokemonResponse])
+def listar_pokemons(db: Session = Depends(get_db)):
+    return db.query(PokemonDB).all()
+
+@app.get("/pokemons/{id}", response_model=PokemonResponse)
+def buscar_pokemon(id: int, db: Session = Depends(get_db)):
+    pokemon = db.query(PokemonDB).filter(PokemonDB.id == id).first()
+
+    if pokemon is None:
+        raise HTTPException(status_code=404, detail="Pokemon não encontrado no banco de dados")
+
+    return pokemon
+
+@app.put("/pokemons/{id}", response_model=PokemonResponse)
+def atualizar_pokemon(id: int, dados: Pokemon, db: Session = Depends(get_db)):
+    pokemon = db.query(PokemonDB).filter(PokemonDB.id == id).first()
+
+    if pokemon is None:
+        raise HTTPException(status_code=404, detail="Pokemon não encontrado no banco de dados")
+
+    for campo, valor in dados.model_dump().items():
+        setattr(pokemon, campo, valor)
+
+    db.commit()
+    db.refresh(pokemon)
+
+    return pokemon
+
+@app.delete("/pokemons/{id}")
+def excluir_pokemon(id: int, db: Session = Depends(get_db)):
+    pokemon = db.query(PokemonDB).filter(PokemonDB.id == id).first()
+
+    if pokemon is None:
+        raise HTTPException(status_code=404, detail="Pokemon não encontrado no banco de dados")
+
+    db.delete(pokemon)
+    db.commit()
+
+    return {"mensagem": "Pokemon excluído com sucesso"}
