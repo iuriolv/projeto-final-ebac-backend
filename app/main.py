@@ -32,7 +32,7 @@ async def read_root():
     return {"Hello": "World"}
 
 @app.get("/pokeapi/pokemons")
-async def acessar_api(page: int = 1, limit: int = 20, ):
+async def acessar_api(page: int = 1, limit: int = 20):
 
     offset = (page - 1) * limit
 
@@ -105,18 +105,36 @@ def criar_pokemon(pokemon: CriarPokemon, db: Session = Depends(get_db)):
 
     return novo_pokemon
 
-@app.get("/pokemons", response_model=list[PokemonResponse])
-def listar_pokemons(db: Session = Depends(get_db)):
-    return db.query(PokemonDB).all()
 
-@app.get("/pokemons/{id}", response_model=PokemonResponse)
-def buscar_pokemon(id: int, db: Session = Depends(get_db)):
-    pokemon = db.query(PokemonDB).filter(PokemonDB.id == id).first()
+@app.get("/pokemons")
+def listar_pokemons(page: int = 1, limit: int = 20, db: Session = Depends(get_db)):
+    
+    offset = (page - 1) * limit
 
-    if pokemon is None:
-        raise HTTPException(status_code=404, detail="Pokemon não encontrado no banco de dados")
+    query = db.query(PokemonDB)
+    total = query.count()
 
-    return pokemon
+    pokemons = (
+        query
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    return {
+        "pagina": page,
+        "total": total,
+        "limite": limit,
+        "offset": offset,
+        "next": f"/pokemons?page={page + 1}&limit={limit}"
+        if offset + limit < total else None,
+        "previous": f"/pokemons?page={page - 1}&limit={limit}"
+        if page > 1 else None,
+        "Pokemons": [
+            PokemonResponse.model_validate(pokemon).model_dump()
+            for pokemon in pokemons
+        ],
+    }
 
 @app.put("/pokemons/{id}", response_model=PokemonResponse)
 def atualizar_pokemon(id: int, dados: CriarPokemon, db: Session = Depends(get_db)):
