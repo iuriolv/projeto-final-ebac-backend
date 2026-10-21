@@ -1,440 +1,367 @@
-🐍 Pokémon API — Projeto Final EBAC
+# 🐍 Pokémon API — Projeto Final EBAC
 
-API REST desenvolvida em Python com FastAPI como projeto final do curso de Backend da EBAC.
+API REST desenvolvida em Python com FastAPI como projeto final do curso de Backend Python da EBAC.
 
-A aplicação utiliza a PokéAPI como fonte de dados e disponibiliza endpoints para consultar e listar Pokémon. Para melhorar o desempenho das consultas individuais, os dados são armazenados temporariamente em Redis.
+A aplicação integra a [PokéAPI](https://pokeapi.co/) para consultar informações de Pokémon e também disponibiliza um CRUD próprio com persistência em SQLite, utilizando SQLAlchemy como ORM. O Redis é utilizado para armazenar temporariamente os resultados das consultas individuais à API externa, reduzindo requisições repetidas.
 
-O projeto também utiliza Docker, Docker Compose e Poetry, além de possuir testes automatizados.
+O projeto conta com testes automatizados, documentação interativa, configuração por variáveis de ambiente e suporte à execução com Docker Compose.
 
-🚀 Tecnologias
+## 🚀 Tecnologias
 
-Python 3.14
+- Python 3.14
+- FastAPI
+- Pydantic
+- SQLAlchemy
+- SQLite
+- Redis
+- Requests
+- Poetry
+- Pytest
+- pytest-cov
+- Docker
+- Docker Compose
+- PokéAPI
 
-FastAPI
+## 📋 Funcionalidades
 
-Pydantic
+- Consulta e listagem de Pokémon através da PokéAPI.
+- Paginação dos resultados externos.
+- Consulta individual com cache Redis e expiração de 5 minutos.
+- Cadastro de Pokémon no banco SQLite.
+- Listagem dos Pokémon cadastrados localmente.
+- Consulta de registros por ID.
+- Atualização e exclusão de registros.
+- Validação de dados com Pydantic.
+- Tratamento de erros e registros inexistentes.
+- Persistência de dados com SQLAlchemy.
+- Documentação automática com Swagger e ReDoc.
+- Testes automatizados com Pytest e medição de cobertura.
 
-Requests
+## 📦 Pré-requisitos
 
-Redis
+Para executar com Docker:
 
-Poetry
+- Docker
+- Docker Compose
 
-Pytest
+Para executar localmente:
 
-Docker
+- Python 3.14
+- Poetry
+- Redis em execução
 
-Docker Compose
+## 🔽 Clonando o projeto
 
-PokéAPI
-
-📋 Funcionalidades
-
-A API disponibiliza as seguintes funcionalidades:
-
-Verificação do funcionamento da API.
-
-Listagem de Pokémon.
-
-Paginação da lista de Pokémon.
-
-Consulta de um Pokémon específico através do ID.
-
-Retorno de informações como nome, ID, altura, peso, tipos e sprites.
-
-Cache das consultas individuais utilizando Redis.
-
-Expiração automática do cache após 5 minutos.
-
-Tratamento de Pokémon inexistentes.
-
-Documentação interativa através do Swagger.
-
-Documentação através do ReDoc.
-
-Testes automatizados.
-
-📦 Pré-requisitos
-
-Para executar o projeto utilizando Docker, é necessário ter instalado:
-
-Docker
-
-Docker Compose
-
-Não é necessário instalar Python, Redis ou Poetry na máquina quando a aplicação for executada através do Docker.
-
-🔽 Clonando o projeto
-
-Clone o repositório:
-
+```bash
 git clone https://github.com/iuriolv/projeto-final-ebac-backend.git
-
-
-Entre no diretório do projeto:
-
 cd projeto-final-ebac-backend
+```
 
-🐳 Executando o projeto com Docker
+## 🐳 Executando com Docker Compose
 
-A forma recomendada de executar a aplicação é utilizando o Docker Compose.
+Na raiz do projeto, execute:
 
-Execute:
-
-docker compose up --build
-
-
-Esse comando irá:
-
-Construir a imagem da API.
-
-Instalar as dependências do projeto.
-
-Criar o container da aplicação.
-
-Criar o container do Redis.
-
-Configurar a comunicação entre a API e o Redis.
-
-Iniciar o servidor FastAPI.
-
-Após a inicialização, a API estará disponível em:
-
-http://localhost:8000
-
-Executando em segundo plano
-
-Caso não queira manter o terminal ocupado:
-
+```bash
 docker compose up --build -d
+```
 
-Verificando os containers
-
-Para verificar os containers em execução:
-
-docker compose ps
-
-
-Você deverá encontrar os serviços:
-
-pokemon-api
-pokemon-redis
-
-Visualizando os logs
-
-Para visualizar os logs da aplicação:
-
-docker compose logs api
-
-
-Para acompanhar os logs em tempo real:
-
-docker compose logs -f api
-
-Parando a aplicação
-
-Para parar e remover os containers:
-
-docker compose down
-
-📚 Utilizando a API
-
-Depois de iniciar o projeto, existem duas formas principais de utilizar a API:
-
-Através dos endpoints diretamente.
-
-Através da documentação interativa do FastAPI.
-
-📖 Swagger
-
-O FastAPI disponibiliza uma interface gráfica para testar os endpoints.
-
-Acesse no navegador:
-
-http://localhost:8000/docs
-
-
-Na interface do Swagger é possível:
-
-Visualizar todos os endpoints.
-
-Informar parâmetros.
-
-Executar requisições.
-
-Visualizar as respostas.
-
-Ver os códigos HTTP retornados pela API.
-
-Essa é a forma mais simples de testar a aplicação.
-
-📘 ReDoc
-
-Também é possível acessar a documentação através do ReDoc:
-
-http://localhost:8000/redoc
-
-🔗 Endpoints disponíveis
-GET /
-
-Verifica se a aplicação está funcionando.
-
-Requisição
-GET http://localhost:8000/
-
-Resposta
-{
-  "Hello": "World"
-}
-
-GET /pokemons
-
-Retorna uma lista de Pokémon.
-
-O endpoint possui paginação através dos parâmetros page e limit.
-
-Parâmetros
-Parâmetro	Tipo	Padrão	Descrição
-page	integer	1	Número da página
-limit	integer	20	Quantidade de Pokémon por página
-Exemplo
-
-Para buscar os primeiros 20 Pokémon:
-
-GET http://localhost:8000/pokemons
-
-
-Ou:
-
-GET http://localhost:8000/pokemons?page=1&limit=20
-
-
-Para buscar 10 Pokémon da segunda página:
-
-GET http://localhost:8000/pokemons?page=2&limit=10
-
-Exemplo de resposta
-{
-  "pagina": 1,
-  "total": 1302,
-  "limite": 20,
-  "offset": 0,
-  "next": "https://pokeapi.co/api/v2/pokemon?offset=20&limit=20",
-  "previous": null,
-  "Pokemons": [
-    {
-      "name": "bulbasaur",
-      "url": "https://pokeapi.co/api/v2/pokemon/1/"
-    },
-    {
-      "name": "ivysaur",
-      "url": "https://pokeapi.co/api/v2/pokemon/2/"
-    }
-  ]
-}
-
-
-O offset é calculado automaticamente pela aplicação através da página e do limite informado:
-
-offset = (page - 1) * limit
-
-GET /pokemons/{id}
-
-Retorna informações detalhadas de um Pokémon através do seu ID.
-
-Exemplo
-
-Para consultar o Pikachu:
-
-GET http://localhost:8000/pokemons/25
-
-Resposta
-{
-  "name": "pikachu",
-  "id": 25,
-  "height": 4,
-  "weight": 60,
-  "types": [
-    "electric"
-  ],
-  "sprites": {
-    "front_default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png",
-    "back_default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/25.png"
-  }
-}
-
-
-As informações retornadas são:
-
-name — nome do Pokémon.
-
-id — identificador do Pokémon.
-
-height — altura.
-
-weight — peso.
-
-types — tipos do Pokémon.
-
-sprites.front_default — imagem frontal.
-
-sprites.back_default — imagem traseira.
-
-Pokémon inexistente
-
-Caso seja informado um ID que não exista na PokéAPI:
-
-GET http://localhost:8000/pokemons/999999
-
-
-A aplicação retorna:
-
-{
-  "detail": "Pokemon não encontrado"
-}
-
-
-com status HTTP:
-
-404 Not Found
-
-⚡ Cache com Redis
-
-O endpoint de consulta individual utiliza Redis para armazenar os dados dos Pokémon.
-
-Quando um Pokémon é consultado, a aplicação primeiro verifica se ele já está armazenado no cache.
-
-O funcionamento é:
-
-              GET /pokemons/25
-                      │
-                      ▼
-               ┌─────────────┐
-               │    Redis    │
-               │ Existe no   │
-               │   cache?    │
-               └──────┬──────┘
-                      │
-             ┌────────┴────────┐
-             │                 │
-            SIM               NÃO
-             │                 │
-             ▼                 ▼
-       Retorna cache      Consulta PokéAPI
-                               │
-                               ▼
-                         Salva no Redis
-                               │
-                               ▼
-                         Retorna dados
-
-
-O cache possui duração de 300 segundos (5 minutos).
-
-Isso significa que, após consultar um Pokémon, novas consultas ao mesmo Pokémon dentro dos próximos 5 minutos podem utilizar os dados armazenados no Redis em vez de realizar uma nova chamada à PokéAPI.
-
-🌐 PokéAPI
-
-A aplicação utiliza a PokéAPI
- como fonte externa dos dados.
-
-A listagem utiliza:
-
-https://pokeapi.co/api/v2/pokemon
-
-
-A consulta individual utiliza:
-
-https://pokeapi.co/api/v2/pokemon/{id}
-
-
-A aplicação recebe os dados da PokéAPI e transforma a resposta antes de disponibilizá-la ao usuário.
-
-🧪 Executando os testes
-
-O projeto possui testes automatizados utilizando Pytest.
-
-Caso as dependências estejam instaladas através do Poetry:
-
-poetry run pytest
-
-
-Para visualizar mais detalhes durante a execução:
-
-poetry run pytest -v
-
-
-Para executar os testes dentro do ambiente virtual:
-
-pytest
-
-💻 Executando sem Docker
-
-Também é possível executar o projeto diretamente através do Python e Poetry.
-
-1. Instale o Poetry
-
-Instale o Poetry de acordo com seu sistema operacional.
-
-2. Instale as dependências
-
-Dentro do diretório do projeto:
-
-poetry install
-
-3. Configure o Redis
-
-Para execução local, o Redis deve estar disponível na máquina.
-
-A aplicação utiliza por padrão:
-
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-4. Execute a aplicação
-poetry run uvicorn app.main:app --reload
-
+O Compose irá construir a imagem da API, instalar as dependências, iniciar o Redis e executar a aplicação FastAPI.
 
 A API ficará disponível em:
 
-http://localhost:8000
+- API: http://localhost:8000
+- Swagger: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
-🛑 Encerrando o projeto
+### Comandos úteis
 
-Se estiver utilizando Docker Compose:
+Verificar os serviços:
 
+```bash
+docker compose ps
+```
+
+Consultar os logs da API:
+
+```bash
+docker compose logs -f api
+```
+
+Parar os serviços:
+
+```bash
 docker compose down
+```
 
+O banco SQLite utiliza um volume persistente para manter os registros quando o contêiner da API é recriado. O Redis também possui um volume para persistência dos dados do cache.
 
-Caso queira remover também os volumes associados:
+**Atenção:** `docker compose down -v` remove os volumes do projeto e pode apagar os dados persistidos.
 
-docker compose down -v
+## ⚙️ Configuração por variáveis de ambiente
 
+O projeto utiliza variáveis de ambiente para configurar o banco de dados e a conexão com o Redis.
 
-Atenção: utilize -v apenas se quiser remover os volumes criados pelo Docker Compose.
+Crie seu arquivo `.env` com base no `.env.example`, caso necessário para sua execução local.
 
-📌 Resumo dos principais comandos
-Ação	Comando
-Construir e iniciar	docker compose up --build
-Iniciar em segundo plano	docker compose up --build -d
-Ver containers	docker compose ps
-Ver logs	docker compose logs -f api
-Parar aplicação	docker compose down
-Executar testes	poetry run pytest
-Executar testes detalhados	poetry run pytest -v
-Executar localmente	poetry run uvicorn app.main:app --reload
-🔗 Links úteis
+Exemplo de configuração local:
 
-Repositório: https://github.com/iuriolv/projeto-final-ebac-backend
+```dotenv
+DATABASE_URL=sqlite:///./pokemon.db
+REDIS_HOST=localhost
+REDIS_PORT=6379
+```
 
-PokéAPI: https://pokeapi.co/
+No Docker Compose, o banco é configurado para utilizar o arquivo `/data/pokemon.db`, armazenado no volume persistente, e o Redis é acessado pelo nome do serviço `redis`.
 
-Swagger: http://localhost:8000/docs
+## 📚 Documentação da API
 
-ReDoc: http://localhost:8000/redoc
+O FastAPI disponibiliza documentação interativa automaticamente.
 
-👨‍💻 Autor
+- **Swagger:** http://localhost:8000/docs
+- **ReDoc:** http://localhost:8000/redoc
 
-Iuri Oliveira
+Através dessas interfaces, é possível consultar os endpoints, informar parâmetros, enviar requisições e visualizar as respostas.
 
-Projeto desenvolvido como parte do Projeto Final — EBAC Backend.
+## 🔗 Endpoints disponíveis
+
+### Verificação da aplicação
+
+#### `GET /`
+
+Verifica se a API está funcionando.
+
+Exemplo de resposta:
+
+```json
+{
+  "Hello": "World"
+}
+```
+
+### CRUD local — SQLite
+
+Os endpoints abaixo operam sobre os Pokémon armazenados no banco de dados local.
+
+#### `POST /pokemons`
+
+Cadastra um Pokémon.
+
+Exemplo de requisição:
+
+```json
+{
+  "name": "pikachu",
+  "height": 4,
+  "weight": 60,
+  "types": ["electric"],
+  "front_default": "https://example.com/front.png",
+  "back_default": "https://example.com/back.png"
+}
+```
+
+A API gera o ID do registro e retorna os dados cadastrados.
+
+#### `GET /pokemons`
+
+Lista os Pokémon cadastrados no banco local.
+
+Exemplo de resposta:
+
+```json
+[
+  {
+    "id": 1,
+    "name": "pikachu",
+    "height": 4,
+    "weight": 60,
+    "types": ["electric"],
+    "front_default": "https://example.com/front.png",
+    "back_default": "https://example.com/back.png"
+  }
+]
+```
+
+Se não houver registros, a resposta será uma lista vazia.
+
+#### `GET /pokemons/{id}`
+
+Busca um Pokémon cadastrado pelo ID.
+
+Exemplo:
+
+```http
+GET /pokemons/1
+```
+
+Caso o registro não exista, a API retorna `404 Not Found`.
+
+#### `PUT /pokemons/{id}`
+
+Atualiza os dados de um Pokémon existente.
+
+Exemplo:
+
+```http
+PUT /pokemons/1
+```
+
+O corpo da requisição deve conter os campos esperados pelo schema de criação, incluindo nome, altura, peso e tipos. Os campos de sprites são opcionais.
+
+Caso o ID não exista, a API retorna `404 Not Found`.
+
+#### `DELETE /pokemons/{id}`
+
+Exclui um Pokémon cadastrado.
+
+Exemplo:
+
+```http
+DELETE /pokemons/1
+```
+
+Resposta de sucesso:
+
+```json
+{
+  "mensagem": "Pokemon excluído com sucesso"
+}
+```
+
+Caso o registro não exista, a API retorna `404 Not Found`.
+
+### Integração com a PokéAPI
+
+As rotas externas são separadas do CRUD local para evitar conflitos entre os dados consultados na PokéAPI e os registros salvos no SQLite.
+
+#### `GET /pokeapi/pokemons`
+
+Lista os Pokémon disponibilizados pela PokéAPI.
+
+Parâmetros:
+
+| Parâmetro | Tipo | Padrão | Descrição |
+|---|---|---|---|
+| `page` | Integer | 1 | Página solicitada |
+| `limit` | Integer | 20 | Quantidade de resultados por página |
+
+Exemplo:
+
+```http
+GET /pokeapi/pokemons?page=1&limit=20
+```
+
+A resposta contém os metadados de paginação, os links para a página anterior e a próxima e os resultados da PokéAPI.
+
+O deslocamento é calculado por:
+
+```python
+offset = (page - 1) * limit
+```
+
+#### `GET /pokeapi/pokemons/{id}`
+
+Consulta um Pokémon na PokéAPI pelo ID.
+
+Exemplo:
+
+```http
+GET /pokeapi/pokemons/25
+```
+
+A resposta inclui:
+
+- `name`: nome do Pokémon.
+- `id`: identificador.
+- `height`: altura.
+- `weight`: peso.
+- `types`: lista de tipos.
+- `sprites`: URLs das imagens frontal e traseira.
+
+Se o Pokémon não for encontrado na API externa, a aplicação retorna `404 Not Found`.
+
+## ⚡ Cache com Redis
+
+O endpoint de consulta individual verifica primeiro se os dados estão armazenados no Redis.
+
+O fluxo de consulta é:
+
+1. A API recebe o ID do Pokémon.
+2. Verifica a existência dos dados no cache.
+3. Se houver dados, retorna o resultado armazenado.
+4. Caso contrário, consulta a PokéAPI.
+5. Armazena o resultado no Redis por 300 segundos.
+6. Retorna os dados ao cliente.
+
+O cache reduz requisições repetidas à fonte externa. Ele não substitui o SQLite, que é responsável pela persistência dos registros do CRUD local.
+
+## 🗄️ Banco de dados
+
+O projeto utiliza SQLite com SQLAlchemy para persistir os registros criados pela API.
+
+O SQLAlchemy é responsável pelo mapeamento entre os objetos Python e a tabela de Pokémon no banco de dados.
+
+O arquivo SQLite é configurado pela variável `DATABASE_URL`. Na execução com Docker Compose, um volume mantém os dados persistidos fora do ciclo de vida do contêiner.
+
+## 🧪 Executando os testes
+
+O projeto utiliza Pytest para validar o CRUD e a integração com a PokéAPI.
+
+Executar todos os testes:
+
+```bash
+poetry run pytest
+```
+
+Executar com detalhes:
+
+```bash
+poetry run pytest -v
+```
+
+Executar com relatório de cobertura:
+
+```bash
+poetry run pytest --cov=app --cov-report=term-missing
+```
+
+A cobertura observada durante o desenvolvimento chegou a **99%**, considerando os arquivos contabilizados pelo relatório.
+
+Os testes do CRUD utilizam um banco SQLite isolado, permitindo validar as operações sem depender dos registros do banco de desenvolvimento.
+
+## 💻 Executando localmente
+
+### 1. Instalar as dependências
+
+Com o Poetry instalado, execute:
+
+```bash
+poetry install
+```
+
+### 2. Configurar o ambiente
+
+Configure as variáveis de ambiente necessárias, conforme o arquivo `.env.example`.
+
+Certifique-se de que o Redis esteja disponível em `localhost:6379`.
+
+### 3. Iniciar a aplicação
+
+```bash
+poetry run uvicorn app.main:app --reload
+```
+
+A API ficará disponível em http://localhost:8000.
+
+## 🔗 Links úteis
+
+- [Repositório no GitHub](https://github.com/iuriolv/projeto-final-ebac-backend)
+- [PokéAPI](https://pokeapi.co/)
+- [Documentação do FastAPI](https://fastapi.tiangolo.com/)
+- [Documentação do SQLAlchemy](https://docs.sqlalchemy.org/)
+- [Documentação do Redis](https://redis.io/docs/)
+
+## 👨‍💻 Autor
+
+**Iuri Oliveira**
+
+Projeto desenvolvido como parte do Projeto Final do curso de Backend Python da EBAC.
