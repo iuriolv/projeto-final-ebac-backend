@@ -4,7 +4,7 @@ from app.main import app
 client = TestClient(app)
 
 def test_pokemons():
-    response = client.get("/pokemons?page=1&limit=20")
+    response = client.get("pokeapi/pokemons?page=1&limit=20")
 
     assert response.status_code == 200
 

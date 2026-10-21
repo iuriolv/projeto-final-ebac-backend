@@ -7,7 +7,7 @@ import os
 from sqlalchemy.orm import Session
 from app.database import Base, engine, get_db
 from app.models import PokemonDB
-from app.schemas import Pokemon, PokemonResponse
+from app.schemas import Pokemon, PokemonResponse, CriarPokemon
 
 redis_client = redis.Redis(host=os.getenv("REDIS_HOST", "localhost"), port=int(os.getenv("REDIS_PORT", 6379)), decode_responses=True)
 
@@ -93,7 +93,7 @@ async def acessar_pokemon_id(id: int):
 
 
 @app.post("/pokemons", response_model=PokemonResponse)
-def criar_pokemon(pokemon: Pokemon, db: Session = Depends(get_db)):
+def criar_pokemon(pokemon: CriarPokemon, db: Session = Depends(get_db)):
 
     if db.query(PokemonDB).filter(PokemonDB.name == pokemon.name).first():
         raise HTTPException(status_code=400, detail="Pokemon já existe no banco de dados")
@@ -119,7 +119,7 @@ def buscar_pokemon(id: int, db: Session = Depends(get_db)):
     return pokemon
 
 @app.put("/pokemons/{id}", response_model=PokemonResponse)
-def atualizar_pokemon(id: int, dados: Pokemon, db: Session = Depends(get_db)):
+def atualizar_pokemon(id: int, dados: CriarPokemon, db: Session = Depends(get_db)):
     pokemon = db.query(PokemonDB).filter(PokemonDB.id == id).first()
 
     if pokemon is None:

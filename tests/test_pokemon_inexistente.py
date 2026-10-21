@@ -13,7 +13,7 @@ def test_pokemon_nao_encontrado():
     with patch("app.main.redis_client.get", return_value=None):
         with patch("app.main.requests.get", return_value=resposta_pokeapi):
 
-            response = client.get("/pokemons/999999")
+            response = client.get("pokeapi/pokemons/999999")
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Pokemon não encontrado"

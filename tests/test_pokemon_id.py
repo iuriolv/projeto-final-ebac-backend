@@ -4,7 +4,6 @@ from app.main import app
 
 client = TestClient(app)
 
-
 def test_pokemon_id():
 
     dados_pokemon = {
@@ -33,7 +32,7 @@ def test_pokemon_id():
         with patch("app.main.redis_client.setex"):
             with patch("app.main.requests.get", return_value=resposta_pokeapi):
 
-                response = client.get("/pokemons/25")
+                response = client.get("pokeapi/pokemons/25")
 
     assert response.status_code == 200
 
