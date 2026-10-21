@@ -204,6 +204,11 @@ def atualizar_pokemon(id: int, dados: CriarPokemon, db: Session = Depends(get_db
     db.commit()
     db.refresh(pokemon)
 
+    try:
+        redis_client.delete(f"pokemon:{id}")
+    except redis.RedisError:
+        pass
+
     return pokemon
 
 @app.delete("/pokemons/{id}")
