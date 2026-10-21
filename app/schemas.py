@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-class PokemonCreate(BaseModel):
+class Pokemon(BaseModel):
     name: str
     height: int
     weight: int
@@ -8,7 +8,7 @@ class PokemonCreate(BaseModel):
     front_default: str | None = None
     back_default: str | None = None
 
-class PokemonResponse(PokemonCreate):
+class PokemonResponse(Pokemon):
     id: int
 
     class Config:
